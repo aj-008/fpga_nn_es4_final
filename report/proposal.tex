@@ -1,0 +1,54 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\setlist{nosep}
+
+\title{ES4 Final Project Proposal: Handwritten Digit Recognizer}
+\author{AJ Romeo, Peter Wiehler, Rhys de Haan, Charles Obeng-Ansong, Onyx Ward}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Project description}
+
+We will build a handwritten digit recognizer that runs entirely on our UPduino. A user draws a digit from 0 to 9 on a VGA monitor using a joystick to move a cursor and a pushbutton to paint. When they press a second ``classify'' button, a small neural network implemented in FPGA logic reads the drawing and shows its guess on the same screen. A third button clears the canvas so they can try again.
+
+The network will be trained in Python on the MNIST dataset, then quantized to 8-bit integers (so it can fit in the FPGA RAM) and loaded onto the FPGA. All inference happens on the FPGA. The drawing is stored as a $28\times28$ grid, downsampled to $14\times14$ (196 inputs to the NN), and fed through a two-layer network ($196 \rightarrow 16 \rightarrow 10$). That is about 3,300 weights (26.4kbit), which fits in the chip's block RAM. We expect fair accuracy on MNIST test digits, with some loss on joystick-drawn digits that we will try to reduce by making strokes thick and centered.
+
+\medskip
+\noindent\textbf{Inputs:} arcade joystick, pushbuttons (paint, classify, clear).
+
+\noindent\textbf{Outputs:} VGA monitor, driven through VGA adapter.
+
+\medskip
+\noindent\textbf{Screen layout:}
+\begin{itemize}
+  \item Left side: a large $28\times28$ drawing canvas, each cell drawn as a $14\times14$ pixel block ($392\times392$ pixels), with a highlighted square showing the cursor. The exact pixel values can change as long as we keep the $14\times14$ input to the network.
+  \item Right side: the predicted digit drawn large, and a row of ten small bars showing the network's score for each class.
+  \item Bottom: a short status line (``DRAW'', ``THINKING'', ``RESULT'').
+\end{itemize}
+
+\section{Current unknowns and point people}
+
+\begin{tabularx}{\textwidth}{X l}
+\toprule
+\textbf{Unknown} & \textbf{Person} \\
+\midrule
+How to generate VGA timing with the PLL and draw the canvas, cursor, predicted digit and score bars on screen & Onyx \\
+How to read the arcade joystick and buttons cleanly and turn them into cursor movement and painting & Charles \\
+How to store the canvas in memory, downsample it, and coordinate draw, classify and clear with a top-level state machine & Rhys \\
+How to build the multiply-accumulate datapath that runs both network layers using the UPduino's DSP block, including ReLU and picking the highest score & AJ \\
+How to train and quantize the network in Python and export the weights into memory initialization files the FPGA toolchain can load & Peter \\
+\bottomrule
+\end{tabularx}
+
+\section{Hardware needed}
+
+One arcade joystick, three pushbuttons, a VGA adapter, an UPduino, a VGA monitor.
+
+\end{document}
